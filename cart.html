@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koszyk - Vellora</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 1rem; }
+    h1 { text-align: center; }
+    .cart-container { max-width: 800px; margin: auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .item { display: flex; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 0.5rem; }
+    .item span { font-size: 1.1rem; }
+    .remove-btn { background: #e60000; color: white; border: none; padding: 0.25rem 0.75rem; cursor: pointer; border-radius: 4px; }
+    .remove-btn:hover { background: #c00; }
+    .total { font-size: 1.2rem; text-align: right; margin-top: 2rem; }
+    #paypal-button-container { margin-top: 2rem; text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>Twój Koszyk</h1>
+  <div class="cart-container" id="cart"></div>
+  <div class="total" id="total">Łącznie: 0 zł</div>
+  <div id="paypal-button-container"></div>
+
+  <script>
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function renderCart() {
+      const cartContainer = document.getElementById('cart');
+      cartContainer.innerHTML = '';
+      let total = 0;
+
+      cart.forEach((item, index) => {
+        total += item.price;
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${item.name} - ${item.price.toFixed(2)} zł</span>
+          <button class="remove-btn" onclick="removeItem(${index})">Usuń</button>
+        `;
+        cartContainer.appendChild(div);
+      });
+
+      document.getElementById('total').innerText = `Łącznie: ${total.toFixed(2)} zł`;
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
+    }
+
+    renderCart();
+
+    // Zamiast PayPal SDK, stwórz link do płatności:
+    function generatePayPalLink(total) {
+      const payPalURL = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=julekrupa@gmail.com&item_name=Zakup w Vellora&amount=${total.toFixed(2)}&currency_code=PLN&return=http://twojastrona.pl/thankyou&cancel_return=http://twojastrona.pl/cancel`;
+      return payPalURL;
+    }
+
+    // Generowanie przycisku do płatności PayPal
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    const paypalLink = generatePayPalLink(total);
+    const paypalButton = document.createElement('a');
+    paypalButton.href = paypalLink;
+    paypalButton.target = '_blank';
+    paypalButton.innerText = 'Przejdź do płatności PayPal';
+    paypalButton.style.padding = '0.5rem 1rem';
+    paypalButton.style.backgroundColor = '#0070ba';
+    paypalButton.style.color = 'white';
+    paypalButton.style.textDecoration = 'none';
+    paypalButton.style.borderRadius = '4px';
+
+    document.getElementById('paypal-button-container').appendChild(paypalButton);
+  </script>
+</body>
+</html>
